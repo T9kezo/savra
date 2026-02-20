@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Savra – Teacher Insights Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b1120;color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+table{border-collapse:collapse;width:100%}
+
+/* ── Layout ── */
+.header{padding:16px 36px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#6ee7b7,#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#0f172a}
+.logo-text{font-weight:700;font-size:18px;letter-spacing:-.5px}
+.logo-sub{font-size:12px;color:#64748b}
+.header-right{display:flex;align-items:center;gap:12px}
+.date-badge{padding:6px 14px;border-radius:8px;background:rgba(110,231,183,.1);border:1px solid rgba(110,231,183,.2);color:#6ee7b7;font-size:12px;font-weight:500}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#6ee7b7;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.body{padding:28px 36px;max-width:1300px;margin:0 auto}
+
+/* ── Filters ── */
+.filter-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+.filter-label{color:#64748b;font-size:12px;margin-right:2px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.pill{padding:5px 13px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#94a3b8;transition:all .2s}
+.pill:hover{border-color:rgba(255,255,255,.25);color:#f1f5f9}
+.pill.ag{border-color:#6ee7b7;background:rgba(110,231,183,.12);color:#6ee7b7}
+.pill.ab{border-color:#93c5fd;background:rgba(147,197,253,.12);color:#93c5fd}
+.divv{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 4px}
+
+/* ── Stat Tiles ── */
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.stat-tile{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s}
+.stat-tile:hover{border-color:rgba(255,255,255,.15)}
+.stat-label{display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:13px}
+.stat-value{font-size:36px;font-weight:800;color:#f1f5f9;line-height:1}
+.stat-sub{font-size:12px;color:#64748b}
+
+/* ── Section heading ── */
+.section-label{font-size:11px;color:#475569;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600}
+
+/* ── Teacher chips ── */
+.t-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.t-chip{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.1);background:transparent;color:#94a3b8;font-size:13px;transition:all .2s}
+.t-chip:hover{border-color:rgba(255,255,255,.25);color:#f1f5f9}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0f172a;flex-shrink:0}
+
+/* ── Spotlight ── */
+.spotlight{border-radius:18px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:24px}
+
+/* ── Cards ── */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:22px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-sub{font-size:12px;color:#64748b;margin-bottom:16px}
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.ai-card{background:rgba(110,231,183,.03);border:1px solid rgba(110,231,183,.1);border-radius:18px;padding:22px}
+.ins{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:rgba(110,231,183,.06);border-radius:10px;border-left:2px solid #6ee7b7;margin-bottom:10px}
+
+/* ── Donut/Pie ── */
+.pie-wrap{display:flex;align-items:center;gap:24px}
+.pie-legend{display:flex;flex-direction:column;gap:12px}
+.ple{display:flex;align-items:center;gap:10px}
+.pdot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ── Table ── */
+.table-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;margin-bottom:16px}
+.table-head{padding:18px 24px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}
+.export-btn{padding:7px 16px;border-radius:8px;background:rgba(110,231,183,.1);border:1px solid rgba(110,231,183,.2);color:#6ee7b7;font-size:12px;font-weight:600;transition:all .2s}
+.export-btn:hover{background:rgba(110,231,183,.2)}
+th{padding:11px 20px;text-align:left;font-size:11px;color:#475569;font-weight:600;letter-spacing:.8px;text-transform:uppercase;background:rgba(255,255,255,.02)}
+td{padding:13px 20px;border-top:1px solid rgba(255,255,255,.04)}
+tbody tr{cursor:pointer;transition:background .2s}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600}
+
+/* ── Loading / error ── */
+.loading{display:flex;align-items:center;justify-content:center;height:120px;color:#475569;gap:10px;font-size:14px}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.1);border-top-color:#6ee7b7;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-banner{background:rgba(252,165,165,.1);border:1px solid rgba(252,165,165,.2);border-radius:12px;padding:14px 18px;color:#fca5a5;font-size:13px;margin-bottom:20px}
+
+.footer{text-align:center;color:#1e293b;font-size:11px;padding-bottom:8px}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">S</div>
+    <div>
+      <div class="logo-text">Savra Insights</div>
+      <div class="logo-sub">Admin Companion · Principal View</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b">
+      <div class="status-dot"></div>Live
+    </div>
+    <div class="date-badge" id="dateRange">📅 Loading…</div>
+  </div>
+</div>
+
+<div class="body">
+  <div id="errorBanner" style="display:none" class="error-banner"></div>
+  <div class="filter-row" id="filters"><div class="loading"><div class="spinner"></div>Loading filters…</div></div>
+  <div class="stats-grid" id="statsGrid"><div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div></div>
+  <div class="section-label">Per-Teacher Analysis</div>
+  <div class="t-chips" id="tChips"></div>
+  <div id="spotlight" style="display:none" class="spotlight"></div>
+  <div class="charts-row">
+    <div class="card"><div class="card-title">Weekly Activity Trends</div><div class="card-sub" id="trendSub">Content creation per day</div><div id="lineChart"><div class="loading"><div class="spinner"></div></div></div></div>
+    <div class="card"><div class="card-title">Teacher Activity Breakdown</div><div class="card-sub">By content type per teacher</div><div id="barChart"><div class="loading"><div class="spinner"></div></div></div></div>
+  </div>
+  <div class="bottom-row">
+    <div class="card"><div class="card-title">Activity Mix</div><div class="card-sub">Distribution of content types</div><div id="pieChart"><div class="loading"><div class="spinner"></div></div></div></div>
+    <div class="ai-card" id="aiPanel"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+  <div class="table-card">
+    <div class="table-head">
+      <div><div class="card-title">Teacher Roster</div><div class="card-sub" style="margin:0">Click a row to spotlight that teacher</div></div>
+      <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div id="roster"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+  <div class="footer" id="footer"></div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+// When running locally the API is at /api. On a CDN-only deploy, point to your
+// Render/Railway URL e.g. https://savra-api.onrender.com
+const API = '';   // empty = same origin; set to full URL for separate deployments
+
+const TC = { T001:'#6ee7b7', T002:'#93c5fd', T003:'#fca5a5', T004:'#fcd34d', T005:'#c4b5fd' };
+const AC = { 'Lesson Plan':'#6ee7b7', 'Quiz':'#93c5fd', 'Question Paper':'#fca5a5' };
+const TYPES = ['Lesson Plan','Quiz','Question Paper'];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const ST = { teacher:'all', grade:'all', subject:'all' };
+let FILTERS = { teachers:[], grades:[], subjects:[] };
+let CURRENT_TEACHERS = [];   // full teacher stats from last fetch
+let CURRENT_ACTIVITIES = []; // raw activities from last fetch
+
+// ── Fetch helpers ─────────────────────────────────────────────────────────────
+async function get(endpoint, params={}) {
+  const qs = new URLSearchParams(params).toString();
+  const url = `${API}/api/${endpoint}${qs ? '?'+qs : ''}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API ${endpoint} returned ${res.status}`);
+  return res.json();
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBanner');
+  b.textContent = '⚠ ' + msg;
+  b.style.display = 'block';
+  setTimeout(() => b.style.display = 'none', 6000);
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+const ini = n => n.split(' ').map(x => x[0]).join('');
+const pc  = (v, t) => t ? Math.round(v/t*100) : 0;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    FILTERS = await get('filters');
+    renderFilters();
+    await refresh();
+  } catch(e) {
+    showError('Could not connect to API. Make sure server.js is running on port 3000.');
+    console.error(e);
+  }
+}
+
+// ── Build API query from state ────────────────────────────────────────────────
+function buildParams() {
+  const p = {};
+  if (ST.teacher !== 'all') p.teacher_id = ST.teacher;
+  if (ST.grade   !== 'all') p.grade      = ST.grade;
+  if (ST.subject !== 'all') p.subject    = ST.subject;
+  return p;
+}
+
+// ── Main refresh: fetch all data and re-render ────────────────────────────────
+async function refresh() {
+  const params = buildParams();
+  try {
+    const [summaryData, teachersData, activitiesData, insightsData] = await Promise.all([
+      get('summary',    params),
+      get('teachers',   params),
+      get('activities', params),
+      get('insights',   params)
+    ]);
+
+    CURRENT_TEACHERS    = teachersData.data;
+    CURRENT_ACTIVITIES  = activitiesData.data;
+
+    renderStats(summaryData.summary);
+    renderTeacherChips();
+    renderSpotlight();
+    renderTrend(summaryData.trend);
+    renderBar();
+    renderPie(summaryData.summary);
+    renderAI(insightsData.insights);
+    renderRoster();
+    renderFooter(summaryData.summary);
+    updateDateRange(summaryData.trend);
+  } catch(e) {
+    showError('Failed to load dashboard data: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ── Render: Filters ───────────────────────────────────────────────────────────
+function renderFilters() {
+  const gradeItems = [{l:'All', v:'all'}, ...FILTERS.grades.map(g => ({l:'G'+g, v:String(g)}))];
+  const subjItems  = [{l:'All', v:'all'}, ...FILTERS.subjects.map(s => ({l:s, v:s}))];
+
+  document.getElementById('filters').innerHTML =
+    `<span class="filter-label">Grade:</span>` +
+    gradeItems.map(o => `<button class="pill${ST.grade===o.v?' ag':''}" onclick="setGrade('${o.v}')">${o.l}</button>`).join('') +
+    `<div class="divv"></div><span class="filter-label">Subject:</span>` +
+    subjItems.map(o => `<button class="pill${ST.subject===o.v?' ab':''}" onclick="setSubject('${o.v}')">${o.l}</button>`).join('');
+}
+
+// ── Render: Stats ─────────────────────────────────────────────────────────────
+function renderStats(s) {
+  document.getElementById('statsGrid').innerHTML = [
+    {l:'Active Teachers',  v:s.active_teachers,  i:'👩‍🏫', sub:'This period'},
+    {l:'Total Activities', v:s.total_activities,  i:'⚡',   sub:'All types'},
+    {l:'Lesson Plans',     v:s.lessons,           i:'📚',   sub:'Created'},
+    {l:'Quizzes',          v:s.quizzes,           i:'📝',   sub:'Conducted'},
+    {l:'Question Papers',  v:s.question_papers,   i:'📋',   sub:'Assigned'}
+  ].map(x => `
+    <div class="stat-tile">
+      <div class="stat-label"><span>${x.i}</span>${x.l}</div>
+      <div class="stat-value">${x.v}</div>
+      <div class="stat-sub">${x.sub}</div>
+    </div>`).join('');
+}
+
+// ── Render: Teacher Chips ─────────────────────────────────────────────────────
+function renderTeacherChips() {
+  const allActive = ST.teacher === 'all';
+  document.getElementById('tChips').innerHTML =
+    `<button class="t-chip" style="${allActive ? 'border-color:#94a3b8;background:rgba(148,163,184,.15);color:#f1f5f9;font-weight:600' : ''}" onclick="setTeacher('all')">🏫 All Teachers</button>` +
+    FILTERS.teachers.map(t => {
+      const c = TC[t.id] || '#94a3b8';
+      const a = ST.teacher === t.id;
+      return `<button class="t-chip" style="${a ? `border-color:${c};background:${c}18;color:${c};font-weight:600` : ''}" onclick="setTeacher('${t.id}')">
+        <div class="av" style="width:24px;height:24px;background:${c};font-size:9px">${ini(t.name)}</div>${t.name}
+      </button>`;
+    }).join('');
+}
+
+// ── Render: Spotlight (per-teacher panel) ─────────────────────────────────────
+function renderSpotlight() {
+  const sp = document.getElementById('spotlight');
+  if (ST.teacher === 'all') { sp.style.display='none'; return; }
+  const t = CURRENT_TEACHERS.find(x => x.teacher_id === ST.teacher);
+  if (!t) { sp.style.display='none'; return; }
+  const c = TC[t.teacher_id] || '#94a3b8';
+  sp.style.cssText = `display:flex;background:${c}08;border:1px solid ${c}30;border-radius:18px;padding:22px 26px;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:24px`;
+  sp.innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="av" style="width:52px;height:52px;background:${c};font-size:18px;flex-shrink:0">${ini(t.teacher_name)}</div>
+      <div>
+        <div style="font-weight:700;font-size:22px">${t.teacher_name}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">${t.teacher_id} · ${t.subjects.join(', ')} · Grades ${t.grades.join(', ')}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:28px">
+      ${[['Lesson Plans',t.lessons,'📚'],['Quizzes',t.quizzes,'📝'],['Question Papers',t.question_papers,'📋'],['Total',t.total,'⚡']].map(([l,v,i]) =>
+        `<div style="text-align:center"><div style="font-size:30px;font-weight:800">${v}</div><div style="font-size:11px;color:#64748b">${i} ${l}</div></div>`
+      ).join('')}
+    </div>`;
+}
+
+// ── Render: SVG Line Chart ────────────────────────────────────────────────────
+function renderTrend(trend) {
+  if (!trend.length) { document.getElementById('lineChart').innerHTML = '<div class="loading" style="color:#475569">No data for selection</div>'; return; }
+
+  const dates = trend.map(d => d.date);
+  if (dates.length >= 2) {
+    const fmt = d => { const p=d.split('-'); return p[2]+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]-1]; };
+    document.getElementById('trendSub').textContent = `Content creation per day (${fmt(dates[0])}–${fmt(dates[dates.length-1])})`;
+  }
+
+  const W=540, H=190, pl=34, pr=8, pt=8, pb=28;
+  const iW=W-pl-pr, iH=H-pt-pb;
+  const byDate = {};
+  trend.forEach(row => { byDate[row.date] = row; });
+  const maxV = Math.max(1, ...trend.flatMap(d => TYPES.map(t => d[t]||0)));
+  const xP = i => pl + i*(iW/(dates.length-1||1));
+  const yP = v => pt + iH - (v/maxV)*iH;
+
+  let out = '';
+  // grid
+  for (let v=0; v<=maxV; v+=Math.ceil(maxV/4)) {
+    const y=yP(v);
+    out += `<line x1="${pl}" x2="${W-pr}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    out += `<text x="${pl-4}" y="${(y+4).toFixed(1)}" fill="#475569" font-size="10" text-anchor="end">${v}</text>`;
+  }
+  // x labels
+  dates.forEach((d,i) => {
+    const parts = d.split('-');
+    const label = parts[2]+' '+['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+parts[1]];
+    out += `<text x="${xP(i).toFixed(1)}" y="${H-2}" fill="#475569" font-size="10" text-anchor="middle">${label}</text>`;
+  });
+  // lines + dots
+  TYPES.forEach(type => {
+    const col = AC[type];
+    const pts = dates.map((d,i) => `${xP(i).toFixed(1)},${yP((byDate[d]?.[type])||0).toFixed(1)}`).join(' ');
+    out += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    dates.forEach((d,i) => {
+      out += `<circle cx="${xP(i).toFixed(1)}" cy="${yP((byDate[d]?.[type])||0).toFixed(1)}" r="3" fill="${col}"/>`;
+    });
+  });
+  // legend
+  TYPES.forEach((t,i) => {
+    out += `<circle cx="${pl+i*130+6}" cy="${H+12}" r="4" fill="${AC[t]}"/>`;
+    out += `<text x="${pl+i*130+14}" y="${H+16}" fill="#94a3b8" font-size="10">${t}</text>`;
+  });
+
+  document.getElementById('lineChart').innerHTML = `<svg width="100%" viewBox="0 0 ${W} ${H+24}" overflow="visible">${out}</svg>`;
+}
+
+// ── Render: SVG Bar Chart ─────────────────────────────────────────────────────
+function renderBar() {
+  if (!CURRENT_TEACHERS.length) { document.getElementById('barChart').innerHTML = '<div class="loading" style="color:#475569">No data</div>'; return; }
+
+  const W=540, H=190, pl=34, pr=8, pt=8, pb=30;
+  const iW=W-pl-pr, iH=H-pt-pb;
+  const maxV = Math.max(1, ...CURRENT_TEACHERS.flatMap(t => [t.lessons, t.quizzes, t.question_papers]));
+  const grpW = iW / CURRENT_TEACHERS.length;
+  const bW   = (grpW-14) / TYPES.length;
+
+  let out = '';
+  for (let v=0; v<=maxV; v+=Math.ceil(maxV/4)) {
+    const y=pt+iH-(v/maxV)*iH;
+    out += `<line x1="${pl}" x2="${W-pr}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    out += `<text x="${pl-4}" y="${(y+4).toFixed(1)}" fill="#475569" font-size="10" text-anchor="end">${v}</text>`;
+  }
+  CURRENT_TEACHERS.forEach((t, gi) => {
+    const gx = pl + gi*grpW + 7;
+    const vals = [t.lessons, t.quizzes, t.question_papers];
+    TYPES.forEach((tp, bi) => {
+      const v=vals[bi], x=gx+bi*bW;
+      const h=Math.max(2,(v/maxV)*iH), y=pt+iH-h;
+      out += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bW-2).toFixed(1)}" height="${h.toFixed(1)}" fill="${AC[tp]}" rx="3"/>`;
+    });
+    const cx=(pl+gi*grpW+grpW/2).toFixed(1);
+    out += `<text x="${cx}" y="${H-2}" fill="#475569" font-size="11" text-anchor="middle">${t.teacher_name.split(' ')[0]}</text>`;
+  });
+  TYPES.forEach((t,i) => {
+    out += `<rect x="${pl+i*135}" y="${H+8}" width="10" height="10" rx="2" fill="${AC[t]}"/>`;
+    out += `<text x="${pl+i*135+13}" y="${H+17}" fill="#94a3b8" font-size="10">${t}</text>`;
+  });
+
+  document.getElementById('barChart').innerHTML = `<svg width="100%" viewBox="0 0 ${W} ${H+28}" overflow="visible">${out}</svg>`;
+}
+
+// ── Render: SVG Donut Chart ───────────────────────────────────────────────────
+function renderPie(s) {
+  const vals = [s.lessons, s.quizzes, s.question_papers];
+  const cols = ['#6ee7b7','#93c5fd','#fca5a5'];
+  const tot  = vals.reduce((a,b)=>a+b,0) || 1;
+  const cx=80, cy=80, R=65, r=42;
+  let angle=-Math.PI/2, arcs='';
+
+  vals.forEach((v,i) => {
+    const sw=2*Math.PI*(v/tot);
+    const x1=cx+R*Math.cos(angle), y1=cy+R*Math.sin(angle);
+    const x2=cx+R*Math.cos(angle+sw), y2=cy+R*Math.sin(angle+sw);
+    const xi1=cx+r*Math.cos(angle+sw), yi1=cy+r*Math.sin(angle+sw);
+    const xi2=cx+r*Math.cos(angle), yi2=cy+r*Math.sin(angle);
+    const lg=sw>Math.PI?1:0;
+    arcs += `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${R} ${R} 0 ${lg} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L${xi1.toFixed(2)} ${yi1.toFixed(2)} A${r} ${r} 0 ${lg} 0 ${xi2.toFixed(2)} ${yi2.toFixed(2)}Z" fill="${cols[i]}" opacity="0.9"/>`;
+    angle+=sw;
+  });
+
+  const donutSVG = `<svg width="160" height="160" viewBox="0 0 160 160">${arcs}<text x="80" y="85" fill="#f1f5f9" font-size="22" font-weight="800" text-anchor="middle">${vals.reduce((a,b)=>a+b,0)}</text><text x="80" y="101" fill="#64748b" font-size="11" text-anchor="middle">total</text></svg>`;
+
+  const legend = TYPES.map((name,i) => `
+    <div class="ple">
+      <div class="pdot" style="background:${cols[i]}"></div>
+      <div>
+        <div style="font-size:13px;color:#cbd5e1">${name}</div>
+        <div style="font-size:11px;color:#475569">${vals[i]} · ${pc(vals[i],vals.reduce((a,b)=>a+b,0))}%</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('pieChart').innerHTML = `<div class="pie-wrap">${donutSVG}<div class="pie-legend">${legend}</div></div>`;
+}
+
+// ── Render: AI Insights Panel ─────────────────────────────────────────────────
+function renderAI(insights) {
+  const items = insights.length
+    ? insights.map(x => `<div class="ins"><span style="font-size:15px;flex-shrink:0;margin-top:1px">${x.icon}</span><span style="font-size:13px;color:#cbd5e1;line-height:1.5">${x.text}</span></div>`).join('')
+    : `<div style="color:#475569;font-size:13px">No data for current filters.</div>`;
+
+  document.getElementById('aiPanel').innerHTML = `
+    <div class="card-title" style="display:flex;align-items:center;gap:8px;margin-bottom:4px">✦ AI Pulse Summary</div>
+    <div class="card-sub" style="margin-bottom:14px">Real-time insights from your data</div>
+    ${items}`;
+}
+
+// ── Render: Teacher Roster Table ──────────────────────────────────────────────
+function renderRoster() {
+  const rows = CURRENT_TEACHERS.map(t => {
+    const c = TC[t.teacher_id] || '#94a3b8';
+    const active = ST.teacher === t.teacher_id;
+    return `<tr onclick="setTeacher('${t.teacher_id}')" style="${active ? `background:${c}08` : ''}">
+      <td><div style="display:flex;align-items:center;gap:10px;font-weight:500;font-size:14px">
+        <div class="av" style="width:32px;height:32px;background:${c};font-size:12px">${ini(t.teacher_name)}</div>${t.teacher_name}
+      </div></td>
+      <td style="color:#64748b;font-size:13px">${t.teacher_id}</td>
+      <td style="color:#64748b;font-size:13px">${t.grades.map(g=>'Grade '+g).join(', ')}</td>
+      <td style="color:#64748b;font-size:13px">${t.subjects.join(', ')}</td>
+      <td><span class="badge" style="background:rgba(110,231,183,.12);color:#6ee7b7">${t.lessons}</span></td>
+      <td><span class="badge" style="background:rgba(147,197,253,.12);color:#93c5fd">${t.quizzes}</span></td>
+      <td><span class="badge" style="background:rgba(252,165,165,.12);color:#fca5a5">${t.question_papers}</span></td>
+      <td style="font-weight:800;font-size:17px">${t.total}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('roster').innerHTML = `<table>
+    <thead><tr>
+      ${['Teacher','ID','Grades','Subjects','Lesson Plans','Quizzes','Question Papers','Total'].map(h=>`<th>${h}</th>`).join('')}
+    </tr></thead>
+    <tbody>${rows || '<tr><td colspan="8" style="text-align:center;color:#475569;padding:32px">No data for current filters</td></tr>'}</tbody>
+  </table>`;
+}
+
+// ── Render: Footer ────────────────────────────────────────────────────────────
+function renderFooter(s) {
+  document.getElementById('footer').textContent =
+    `Savra Insights Engine · ${s.total_activities} unique records · ${s.duplicates_removed} duplicate${s.duplicates_removed===1?'':'s'} auto-removed`;
+}
+
+// ── Update date range badge ───────────────────────────────────────────────────
+function updateDateRange(trend) {
+  if (!trend.length) return;
+  const fmt = d => { const p=d.split('-'); return p[2]+' '+['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]]; };
+  document.getElementById('dateRange').textContent = `📅 ${fmt(trend[0].date)} – ${fmt(trend[trend.length-1].date)}`;
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const headers = ['teacher_id','teacher_name','grade','subject','activity_type','created_at'];
+  const rows = CURRENT_ACTIVITIES.map(r => headers.map(h => JSON.stringify(r[h]??'')).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'savra_teacher_activities.csv';
+  a.click();
+}
+
+// ── State setters ─────────────────────────────────────────────────────────────
+async function setTeacher(v) { ST.teacher = (ST.teacher===v && v!=='all') ? 'all' : v; renderTeacherChips(); renderSpotlight(); await refresh(); }
+async function setGrade(v)   { ST.grade   = v; renderFilters(); await refresh(); }
+async function setSubject(v) { ST.subject = v; renderFilters(); await refresh(); }
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
