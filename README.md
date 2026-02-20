@@ -2,10 +2,8 @@
 
 A production-grade admin analytics dashboard that converts teacher activity data into meaningful insights for school principals.
 
-**Live Demo:** `https://your-app.onrender.com` *(replace after deployment)*  
-**GitHub:** `https://github.com/your-username/savra-dashboard`
-
----
+**Live Demo:** (https://savra.netlify.app/)
+**GitHub:** https://github.com/T9kezo/savra.git
 
 ## Features
 
